@@ -1,0 +1,8 @@
+# Ignore secrets
+
+.env
+__pycache__/
+*.pyc
+config.py
+keys/*.json
+keys/
