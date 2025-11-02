@@ -82,26 +82,35 @@ def instagram_post_run(image_path: str, caption: str = "") -> dict:
         resized_image_path = resize_for_instagram(image_path)
         
         print(f"📤 Uploading image to Cloudinary: {resized_image_path}")
-        upload_result = cloudinary.uploader.upload(resized_image_path)
+        # Upload with explicit transformations to ensure 1:1 aspect ratio
+        upload_result = cloudinary.uploader.upload(
+            resized_image_path,
+            transformation=[
+                {'width': 1080, 'height': 1080, 'crop': 'fill', 'gravity': 'center'},
+                {'quality': 'auto:best'}
+            ],
+            format='jpg'  # Force JPEG format
+        )
         image_url = upload_result.get("secure_url")
 
         if not image_url:
             return {"post_status": "Cloudinary upload failed."}
 
-        print("Cloudinary upload successful.")
-        print("Image URL:", image_url)
+        print(f"✅ Cloudinary upload successful: {image_url}")
 
         # Step 1: Upload image to Instagram container
-        print("Sending image to Instagram via Graph API...")
+        print(f"📸 Creating Instagram media container with caption: {caption[:50]}...")
         upload_url = f"https://graph.facebook.com/v21.0/{business_account_id}/media"
         payload = {
             "image_url": image_url,
             "caption": caption,
             "access_token": access_token
         }
+        
+        print(f"📊 Image URL being sent to Instagram: {image_url}")
         upload_response = requests.post(upload_url, data=payload)
         upload_data = upload_response.json()
-        print("Upload response:", upload_data)
+        print(f"📦 Container response: {upload_data}")
 
         if "id" not in upload_data:
             error_msg = upload_data.get("error", {}).get("message", str(upload_data))
