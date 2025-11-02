@@ -18,9 +18,7 @@ google-cloud-translate==3.11.0
 
 # AI & LLM
 google-generativeai>=0.8.0
-# google-adk might be typo? keeping it
 google-adk>=0.2.0
-openai-whisper
 
 # ML & Data
 numpy>=1.24.0
@@ -31,14 +29,9 @@ scipy
 instagrapi
 cloudinary
 pillow
-pydub
-ffmpeg-python
 
-# Audio & Speech
+# Text-to-Speech (server compatible)
 gtts
-sounddevice
-SpeechRecognition
-playsound
 
 # Utilities
 python-dotenv>=1.0.1
