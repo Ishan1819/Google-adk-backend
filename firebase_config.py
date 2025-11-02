@@ -10,10 +10,9 @@ load_dotenv()
 def initialize_firebase():
     if not firebase_admin._apps:
         # Path to service account key
-        service_account_path = Path(__file__).parent / 'keys' / 'FirebaseServiceAccountKey.json'
+        service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "keys/FirebaseServiceAccountKey.json")
 
-        
-        if not service_account_path.exists():
+        if not Path(service_account_path).exists():
             raise FileNotFoundError(
                 f"Service account key not found at {service_account_path}. "
                 "Please download it from Firebase Console and place it in the backend folder."
