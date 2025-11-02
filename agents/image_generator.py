@@ -5,7 +5,6 @@ import cloudinary.uploader
 from dotenv import load_dotenv
 from google.adk.agents import Agent
 from google.adk.tools import FunctionTool
-from PIL import Image
 
 load_dotenv()
 
@@ -14,47 +13,6 @@ cloudinary.config(
     api_key=os.getenv("API_KEY"),
     api_secret=os.getenv("API_SECRET")
 )
-
-def resize_for_instagram(image_path: str) -> str:
-    """
-    Resize image to Instagram-compatible aspect ratio (1:1 square).
-    Returns path to resized image.
-    """
-    try:
-        img = Image.open(image_path)
-        width, height = img.size
-        
-        # Calculate aspect ratio
-        aspect_ratio = width / height
-        
-        # Instagram supported ratios:
-        # 1:1 (square), 4:5 (portrait), 1.91:1 (landscape)
-        # We'll convert to 1:1 (square) for maximum compatibility
-        
-        # Determine the smaller dimension
-        min_dimension = min(width, height)
-        
-        # Crop to square (center crop)
-        left = (width - min_dimension) // 2
-        top = (height - min_dimension) // 2
-        right = left + min_dimension
-        bottom = top + min_dimension
-        
-        img_cropped = img.crop((left, top, right, bottom))
-        
-        # Resize to Instagram's recommended size (1080x1080)
-        img_resized = img_cropped.resize((1080, 1080), Image.Resampling.LANCZOS)
-        
-        # Save to new file
-        resized_path = image_path.replace('.png', '_instagram.png').replace('.jpg', '_instagram.jpg')
-        img_resized.save(resized_path, quality=95)
-        
-        print(f"✅ Image resized to 1080x1080 (1:1 aspect ratio): {resized_path}")
-        return resized_path
-        
-    except Exception as e:
-        print(f"⚠️ Image resize failed: {e}. Using original image.")
-        return image_path
 
 def instagram_post_run(image_path: str, caption: str = "") -> dict:
     """
@@ -77,40 +35,27 @@ def instagram_post_run(image_path: str, caption: str = "") -> dict:
         return {"post_status": f"Image file not found: {image_path}"}
 
     try:
-        # Resize image to Instagram-compatible aspect ratio
-        print(f"📐 Resizing image for Instagram compatibility...")
-        resized_image_path = resize_for_instagram(image_path)
-        
-        print(f"📤 Uploading image to Cloudinary: {resized_image_path}")
-        # Upload with explicit transformations to ensure 1:1 aspect ratio
-        upload_result = cloudinary.uploader.upload(
-            resized_image_path,
-            transformation=[
-                {'width': 1080, 'height': 1080, 'crop': 'fill', 'gravity': 'center'},
-                {'quality': 'auto:best'}
-            ],
-            format='jpg'  # Force JPEG format
-        )
+        print("Uploading image to Cloudinary...")
+        upload_result = cloudinary.uploader.upload(image_path)
         image_url = upload_result.get("secure_url")
 
         if not image_url:
             return {"post_status": "Cloudinary upload failed."}
 
-        print(f"✅ Cloudinary upload successful: {image_url}")
+        print("Cloudinary upload successful.")
+        print("Image URL:", image_url)
 
         # Step 1: Upload image to Instagram container
-        print(f"📸 Creating Instagram media container with caption: {caption[:50]}...")
+        print("Sending image to Instagram via Graph API...")
         upload_url = f"https://graph.facebook.com/v21.0/{business_account_id}/media"
         payload = {
             "image_url": image_url,
             "caption": caption,
             "access_token": access_token
         }
-        
-        print(f"📊 Image URL being sent to Instagram: {image_url}")
         upload_response = requests.post(upload_url, data=payload)
         upload_data = upload_response.json()
-        print(f"📦 Container response: {upload_data}")
+        print("Upload response:", upload_data)
 
         if "id" not in upload_data:
             error_msg = upload_data.get("error", {}).get("message", str(upload_data))
@@ -134,14 +79,6 @@ def instagram_post_run(image_path: str, caption: str = "") -> dict:
         if "id" not in publish_data:
             error_msg = publish_data.get("error", {}).get("message", str(publish_data))
             return {"post_status": f"Publish failed: {error_msg}"}
-
-        # Cleanup resized image if it was created
-        if resized_image_path != image_path and os.path.exists(resized_image_path):
-            try:
-                os.remove(resized_image_path)
-                print(f"🧹 Cleaned up resized image: {resized_image_path}")
-            except:
-                pass
 
         return {
             "post_status": "Successfully posted to Instagram!",
