@@ -20,7 +20,9 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://lokkala.vercel.app",
-        "https://lokkala.vercel.app/"
+        "https://lokkala.vercel.app/",
+        "https://gen-ai-exchange-hackatho-548d0.web.app",  
+        "https://gen-ai-exchange-hackatho-548d0.firebaseapp.com" 
     ],
     allow_credentials=True,
     allow_methods=["*"],
