@@ -22,7 +22,9 @@ app.add_middleware(
         "https://lokkala.vercel.app",
         "https://lokkala.vercel.app/",
         "https://gen-ai-exchange-hackatho-548d0.web.app",  
-        "https://gen-ai-exchange-hackatho-548d0.firebaseapp.com" 
+        "https://gen-ai-exchange-hackatho-548d0.firebaseapp.com",
+        "https://gen-ai-exchange-hackatho-548d0.web.app/",  
+        "https://gen-ai-exchange-hackatho-548d0.firebaseapp.com/"
     ],
     allow_credentials=True,
     allow_methods=["*"],
